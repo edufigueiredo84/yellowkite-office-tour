@@ -1,0 +1,73 @@
+:root { font-family: "Segoe UI", Arial, sans-serif; color: #f4efdf; background: #232c24; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+* { box-sizing: border-box; }
+html, body, #root, .app { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+button { font: inherit; cursor: pointer; border: 0; }
+button:focus-visible { outline: 3px solid #fff1bd; outline-offset: 5px; }
+button:disabled { cursor: wait; opacity: .6; }
+.app > div:first-child:not(.interface) { position: absolute !important; inset: 0; }
+.interface { position: absolute; inset: 0; pointer-events: none; }
+.start-screen, .pause-screen { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
+.start-screen { background: linear-gradient(180deg, #16221825 0%, #111a1590 70%, #111a15dc 100%); }
+.start-content { display: flex; flex-direction: column; align-items: center; gap: 54px; margin-top: 18vh; animation: fade-in .7s ease both; }
+.start-content img { width: min(331px, 70vw); height: auto; filter: drop-shadow(0 2px 15px #0002); }
+.primary { display: flex; align-items: center; justify-content: space-between; gap: 30px; min-height: 54px; padding: 17px 24px; background: #ecaa26; color: #25291e; border-radius: 3px; font-weight: 600; font-size: 15px; transition: background .15s, transform .15s; }
+.primary:hover { background: #f5bc43; transform: translateY(-1px); }
+.primary span { font-size: 21px; font-weight: 400; }
+.enter { min-width: 192px; }
+.location { position: absolute; left: 36px; top: 32px; display: flex; align-items: center; gap: 13px; padding: 13px 20px 14px 15px; border: 1px solid #efe8cc25; background: #253025d9; border-radius: 3px; }
+.location-dot { width: 6px; height: 6px; border-radius: 50%; background: #ecaa26; }
+.location > div { display: flex; flex-direction: column; gap: 6px; }
+.location small { font-size: 8px; letter-spacing: 1.7px; color: #c6ccb8; }
+.location > div > span { font-size: 16px; font-weight: 450; }
+kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 25px; min-height: 25px; padding: 3px 6px; font: 11px "Segoe UI", sans-serif; border: 1px solid #eee7d544; border-radius: 3px; }
+.pause-hint { position: absolute; top: 39px; right: 36px; display: flex; align-items: center; gap: 9px; padding: 6px 9px; background: #253025c7; border-radius: 3px; font-size: 11px; }
+.reticle { position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; border-radius: 50%; background: #fff7e3d9; box-shadow: 0 0 2px #142617; transform: translate(-50%, -50%); }
+.reticle.active { width: 8px; height: 8px; background: #ecaa26; box-shadow: 0 0 0 4px #ecaa2622; }
+.interaction-prompt { position: absolute; bottom: 135px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 13px; padding: 11px 20px 11px 11px; background: #253025eb; border: 1px solid #fff2c92d; border-radius: 4px; font-size: 14px; white-space: nowrap; }
+.interaction-prompt kbd { background: #ecaa26; color: #273021; border: none; width: 30px; height: 30px; font-weight: 700; font-size: 13px; }
+.walk-hint { position: absolute; bottom: 32px; width: 100%; display: flex; justify-content: center; }
+.controls { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; justify-content: center; font-size: 10px; color: #eee9d7; }
+.walk-hint .controls { background: #263126d9; border: 1px solid #f5efd51c; padding: 12px 18px; border-radius: 4px; }
+.controls > span { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+.dialogue { position: absolute; bottom: 45px; left: 50%; transform: translateX(-50%); width: min(590px, calc(100vw - 48px)); padding: 23px 28px 18px; background: #f2eddfeF; border-left: 3px solid #ecaa26; box-shadow: 0 10px 45px #1c221b26; border-radius: 3px; color: #28362a; animation: fade-in .2s ease both; }
+.dialogue-heading { display: flex; align-items: center; gap: 10px; }
+.dialogue-heading > span:first-child { font-size: 16px; font-weight: 650; }
+.dialogue-heading small { font-size: 9px; letter-spacing: 1px; border-left: 1px solid #919781; padding-left: 10px; }
+.dialogue-count { margin-left: auto; font-size: 9px; letter-spacing: 1px; color: #78816d; }
+.dialogue p { font-size: 19px; line-height: 1.5; margin: 20px 0 23px; }
+.dialogue-next { display: flex; align-items: center; justify-content: flex-end; gap: 12px; font-size: 11px; }
+.dialogue-next kbd { color: #33412f; border-color: #8c937b; }
+.pause-screen { background: #142017c4; backdrop-filter: blur(8px); }
+.pause-card { width: min(440px, calc(100vw - 40px)); display: flex; flex-direction: column; align-items: stretch; }
+.pause-card img { object-fit: contain; align-self: flex-start; width: 215px; height: auto; margin-bottom: 40px; }
+.eyebrow { color: #ecaa26; letter-spacing: 2px; font-size: 9px; }
+h1 { font-weight: 450; font-size: 34px; letter-spacing: -1px; margin: 10px 0 28px; }
+.pause-card .controls { margin-top: 26px; gap: 13px; justify-content: flex-start; }
+.settings { margin: 29px 0 16px; display: flex; gap: 14px; }
+.settings button { color: #c1c8b7; background: #f4ecd00b; border: 1px solid #f4ecd024; border-radius: 3px; padding: 12px; flex: 1; display: flex; align-items: center; justify-content: space-between; font-size: 11px; }
+.settings button:hover { background: #f4ecd014; }
+.settings strong { color: #efead9; font-size: 11px; font-weight: 500; }
+.text-button { color: #c6cdbb; background: transparent; font-size: 11px; text-decoration: underline; text-underline-offset: 4px; padding: 8px; align-self: center; }
+.error { max-width: 360px; font-size: 12px; color: #ffe1a1; text-align: center; line-height: 1.6; }
+.loading, .fallback { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; background: #263126; color: #ece8d3; font-size: 14px; }
+.loading span { width: 28px; height: 2px; background: #ecaa26; margin-top: 20px; animation: pulse 1s infinite alternate; }
+.fallback { z-index: 20; }
+.fallback h1 { font-size: 26px; }.fallback button { padding: 15px 25px; background: #ecaa26; margin-top: 20px; }
+.stats { position: absolute; top: 8px; left: 8px; padding: 5px 7px; color: #fff; background: #17271ed9; font: 11px monospace; }
+.touch-notice { display: none; }
+@media (pointer: coarse) { .touch-notice { display: block; position: absolute; bottom: 15px; width: 100%; padding: 10px 20px; text-align: center; font-size: 12px; background: #223021ec; } }
+@media (max-width: 720px) { .location { left: 18px; top: 18px; } .pause-hint { right: 18px; top: 22px; } .walk-hint .controls { max-width: 90vw; gap: 9px; } .dialogue p { font-size: 17px; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pulse { to { opacity: .3; transform: scaleX(2); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+.dialogue-choices { display: flex; gap: 12px; flex-wrap: wrap; }
+.choice { display: flex; align-items: center; gap: 11px; padding: 11px 18px 11px 11px; background: #e4dfcd; border: 1px solid #b4b7a0; border-radius: 3px; color: #29372b; font-size: 14px; transition: background .15s, border-color .15s; }
+.choice:hover { background: #ecaa26; border-color: #d99f27; }
+.choice kbd { background: #33412f; color: #f3eedc; border: none; width: 26px; height: 26px; font-weight: 700; font-size: 12px; }
+.award { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 15px; padding: 14px 24px 14px 18px; background: #253025f2; border: 1px solid #ecaa2659; border-left: 3px solid #ecaa26; border-radius: 3px; animation: award-in .45s ease both; }
+.award-mark { width: 9px; height: 9px; border-radius: 50%; background: #ecaa26; box-shadow: 0 0 0 5px #ecaa2622; }
+.award > div { display: flex; flex-direction: column; gap: 6px; }
+.award small { font-size: 9px; letter-spacing: 2px; color: #ecaa26; }
+.award span:last-child { font-size: 14px; color: #f2eddf; }
+@keyframes award-in { from { opacity: 0; transform: translate(-50%, -14px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@media (max-width: 720px) { .award { top: 76px; width: min(92vw, 420px); } .choice { font-size: 13px; } }
