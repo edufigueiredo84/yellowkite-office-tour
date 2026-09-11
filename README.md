@@ -1,0 +1,97 @@
+# Yellow Kite — Office Tour
+
+Tour interativo em primeira pessoa pela agência Yellow Kite, rodando no navegador.
+Não é uma landing page 3D nem uma câmera automática: você anda, olha, abre portas,
+entra nas salas e conversa com as pessoas.
+
+## Rodando localmente
+
+Requer Node 20+ e um navegador com WebGL 2 (Chrome, Edge ou Firefox atuais).
+
+```bash
+npm install
+npm run dev
+```
+
+Abra <http://127.0.0.1:5173>, clique em **Entrar** e aceite o bloqueio do mouse.
+
+| Tecla | Ação |
+|---|---|
+| `W` `A` `S` `D` | Andar |
+| Mouse | Olhar |
+| `Shift` | Acelerar |
+| `E` | Interagir / avançar diálogo |
+| `1` `2` | Escolher resposta num diálogo |
+| `Esc` | Liberar o mouse / pausar |
+| `F3` | Mostrar FPS |
+
+Na pausa dá para alternar **Som** e **Gráficos** (Qualidade / Desempenho — o modo
+Desempenho desliga sombras e reduz o DPR).
+
+## Roteiro sugerido para testar
+
+1. Começa **fora** do prédio. Ande até a porta e abra com `E`.
+2. Entre à direita no **RH** — a Ane percebe você e acena. `E` para conversar.
+3. Siga o corredor. Cada sala de equipe (**Lead Zeppelin**, **Performance**,
+   **Rocket**) tem porta própria que precisa ser aberta.
+4. No fundo, à esquerda, a **Copa**: a Rosinha oferece um café (`1` aceita).
+5. À direita da copa, a **Sala dos diretores**; e pelo corredor lateral, a área
+   aberta de **Tecnologia + Direção de Arte**.
+
+## Scripts
+
+```bash
+npm run dev           # servidor de desenvolvimento
+npm run build         # typecheck + build de produção
+npm run preview       # serve o build
+npm test              # testes unitários (matemática da porta)
+npm run test:browser  # 24 checks de navegador — exige o dev server rodando
+```
+
+`test:browser` dirige um Chrome de verdade com Pointer Lock real, percorre o prédio
+inteiro e grava screenshots e um relatório em `test-results/`.
+
+## Arquitetura
+
+```
+src/
+  data/         characters.ts (NPCs, conquistas, slots futuros) · layout.ts (paredes)
+  game/         store.ts (zustand) · Game.tsx (Canvas, física, diagnóstico)
+  player/       controller em primeira pessoa e runtime compartilhado
+  characters/   NPC.tsx (máquina de estados) · TemporaryCharacter.tsx (boneco provisório)
+  interactions/ InteractionManager.tsx (raycast, foco, prompt, execução)
+  world/        Office.tsx (casca) · rooms/ (uma sala por arquivo)
+                primitives · Furniture · Decor · Door · Zone · screens.ts
+  ui/           Interface.tsx · styles.css
+  audio/        efeitos procedurais (sem download, sem voz inventada)
+```
+
+**Zone** esconde a decoração de salas distantes para segurar os draw calls; os
+colliders continuam ativos, então a física não muda. Luzes ficam **fora** das
+Zones de propósito: esconder uma luz recompila shaders e causa engasgo.
+
+## O que ainda é placeholder
+
+Nada aqui inventa pessoas, cargos, histórias ou resultados da Yellow Kite.
+
+- **Modelos 3D**: todos os NPCs usam `TemporaryCharacter`, um boneco genérico que
+  **não representa a aparência real de ninguém**. Para trocar por um modelo
+  aprovado, basta preencher `model` (URL do `.glb`) e os nomes das animações em
+  `src/data/characters.ts`. O caminho GLTF + `AnimationMixer` já está pronto.
+- **Marcos Paulo e Carina** estão na sala, percebem e cumprimentam o visitante,
+  mas têm `dialogues: []` de propósito — nenhuma fala institucional foi inventada.
+  Preencher o array liga a interação automaticamente.
+- **Rosinha**: só `"Vai um cafezinho?"` e os dois botões vieram do briefing. A
+  saudação e as duas respostas são provisórias (`TODO_COPY`).
+- **Equipes** (Lead Zeppelin, Performance, Rocket, Tecnologia + DA): ambiente,
+  estações e iluminação prontos; integrantes ainda `TODO_CONTENT`. Há pontos de
+  spawn reservados em `npcSlots`.
+- **Telas**: tudo desenhado em canvas é ficção decorativa. Toda tela com número
+  carrega o selo *"DADOS FICTÍCIOS · VISUAL DECORATIVO"*.
+
+## Referências
+
+- Planta: `public/assets/references/mapa low yellowkite.png` — define a topologia
+  dos setores. As medidas em metros são adaptações para gameplay.
+- Marca: `public/assets/brand/` — SVGs originais, usados sem recriação nem
+  alteração de proporção; a versão branca ou preta é escolhida pelo contraste.
