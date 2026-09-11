@@ -65,6 +65,7 @@ npm run preview       # serve o build
 npm test              # testes unitários (matemática da porta)
 npm run test:browser  # 24 checks de teclado e mouse — exige o dev server rodando
 npm run test:mobile   # 13 checks de toque (iPhone paisagem e retrato)
+npm run test:characters # gestos, acompanhamento, pausa + screenshots e vídeo
 ```
 
 `test:browser` dirige um Chrome de verdade com Pointer Lock real e percorre o prédio
@@ -83,7 +84,7 @@ src/
   data/         characters.ts (NPCs, conquistas, slots futuros) · layout.ts (paredes)
   game/         store.ts (zustand) · Game.tsx (Canvas, física, diagnóstico)
   player/       controller em primeira pessoa e runtime compartilhado
-  characters/   NPC.tsx (máquina de estados) · TemporaryCharacter.tsx (boneco provisório)
+  characters/   NPC.tsx (estados) · ProceduralCharacter.tsx (modelo articulado) · motion.ts
   interactions/ InteractionManager.tsx (raycast, foco, prompt, execução)
   world/        Office.tsx (casca) · rooms/ (uma sala por arquivo)
                 primitives · Furniture · Decor · Door · Zone · screens.ts
@@ -95,11 +96,29 @@ src/
 colliders continuam ativos, então a física não muda. Luzes ficam **fora** das
 Zones de propósito: esconder uma luz recompila shaders e causa engasgo.
 
+## Personagens e movimento
+
+Os quatro personagens usam uma malha procedural com proporções adultas, contornos
+suaves, gola, botões, mãos com dedos e olhos com íris. Ombro, cotovelo, punho,
+coluna e cabeça têm movimentos independentes. Respiração e piscadas usam fases
+diferentes para cada personagem.
+
+O aceno dura 2,8 segundos e só se repete após uma nova aproximação. Durante o
+diálogo há gestos leves e pequenos movimentos da cabeça. Cabeça e tronco acompanham
+o visitante com limites de rotação; os pés permanecem apoiados, sem deslizar.
+Pausar congela também os gestos. `motion.ts` concentra temporização e suavização,
+com testes de comportamento e consistência entre taxas de quadros.
+
+`npm run test:characters` exige o servidor local na porta 5173 e grava imagens dos
+quatro personagens, `test-results/characters.webm` e `characters-report.json`.
+O visual continua estilizado e genérico. Para uma etapa fotorrealista, o caminho
+previsto é usar modelos GLB com texturas e animações de esqueleto aprovadas.
+
 ## O que ainda é placeholder
 
 Nada aqui inventa pessoas, cargos, histórias ou resultados da Yellow Kite.
 
-- **Modelos 3D**: todos os NPCs usam `TemporaryCharacter`, um boneco genérico que
+- **Modelos 3D**: todos os NPCs usam `ProceduralCharacter`, um modelo genérico que
   **não representa a aparência real de ninguém**. Para trocar por um modelo
   aprovado, basta preencher `model` (URL do `.glb`) e os nomes das animações em
   `src/data/characters.ts`. O caminho GLTF + `AnimationMixer` já está pronto.

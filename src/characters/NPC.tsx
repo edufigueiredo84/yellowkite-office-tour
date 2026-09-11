@@ -9,7 +9,9 @@ import { playerRuntime } from '../player/runtime'
 import { useGame } from '../game/store'
 import { useInteraction } from '../interactions/InteractionManager'
 import { playSound } from '../audio/audio'
-import { TemporaryCharacter } from './TemporaryCharacter'
+import { ProceduralCharacter } from './ProceduralCharacter'
+import { angleDifference } from './motion'
+import type { Attention } from './motion'
 
 function Model({ data, state }: { data: CharacterData; state: React.RefObject<NPCState> }) {
   const gltf = useLoader(GLTFLoader, data.model!)
@@ -37,6 +39,7 @@ export function NPC({ data }: { data: CharacterData }) {
   const state = useRef<NPCState>('IDLE')
   const stateTime = useRef(0)
   const noticed = useRef(false)
+  const attention = useRef<Attention>({ yaw: 0, pitch: 0, engaged: false })
   const worldPosition = useMemo(() => new Vector3(...data.position), [data.position])
   const talkable = data.dialogues.length > 0 || !!data.choice
   useInteraction({ id: data.id, distance: data.interactionDistance,
@@ -71,6 +74,11 @@ export function NPC({ data }: { data: CharacterData }) {
     }
     const looking = next === 'LOOK_AT_PLAYER' || next === 'TALKING' || next === 'PLAYER_NEARBY'
     const target = looking ? Math.atan2(player.x - worldPosition.x, player.z - worldPosition.z) : data.rotation
+    attention.current.engaged = near || next === 'TALKING'
+    attention.current.yaw = looking ? angleDifference(target, data.rotation) : 0
+    attention.current.pitch = looking ? -Math.atan2(player.y + 0.78 - (worldPosition.y + 1.61), Math.max(.3, distance)) : 0
+    // Turn at the spine and neck, keeping the procedural character's feet planted.
+    if (!data.model) return
     const difference = Math.atan2(Math.sin(target - group.current.rotation.y), Math.cos(target - group.current.rotation.y))
     group.current.rotation.y += difference * (1 - Math.exp(-delta * 4))
     group.current.rotation.y = MathUtils.euclideanModulo(group.current.rotation.y + Math.PI, 2 * Math.PI) - Math.PI
@@ -78,8 +86,8 @@ export function NPC({ data }: { data: CharacterData }) {
   return <group position={data.position}>
     <RigidBody type="fixed" colliders={false}><CapsuleCollider args={[0.55, 0.25]} position={[0, 0.8, 0]} /></RigidBody>
     <group ref={group} rotation={[0, data.rotation, 0]} userData={{ interactionId: data.id }}>
-      <Suspense fallback={<TemporaryCharacter state={state} appearance={data.appearance} />}>
-        {data.model ? <Model data={data} state={state} /> : <TemporaryCharacter state={state} appearance={data.appearance} />}
+      <Suspense fallback={<ProceduralCharacter state={state} appearance={data.appearance} attention={attention} id={data.id} />}>
+        {data.model ? <Model data={data} state={state} /> : <ProceduralCharacter state={state} appearance={data.appearance} attention={attention} id={data.id} />}
       </Suspense>
     </group>
   </group>

@@ -25,6 +25,13 @@ function Diagnostics() {
         render: { calls: gl.info.render.calls, triangles: gl.info.render.triangles, textures: gl.info.memory.textures },
         camera: camera.position.toArray(), fov: (camera as PerspectiveCamera).fov,
         pointerLocked: document.pointerLockElement === gl.domElement,
+        characters: characters.map(({ id }) => {
+          const rig = scene.getObjectByName(`character-${id}`)
+          const joint = (name: string) => rig?.getObjectByName(name)?.rotation.toArray().slice(0, 3)
+          return { id, facing: rig?.parent?.rotation.y, torso: joint('torso'), head: joint('head'),
+            shoulder: joint('right-shoulder'), elbow: joint('right-elbow'), wrist: joint('right-wrist'),
+            eyes: rig?.getObjectByName('eyes')?.scale.y }
+        }),
       }),
       place: (x: number, z: number, yaw = 0, pitch = 0) => {
         playerRuntime.teleport?.(x, z); playerRuntime.yaw = yaw; playerRuntime.pitch = pitch
