@@ -8,10 +8,15 @@ type Dialogue = {
   lines: string[]; index: number
   choice: Choice | null; awaitingChoice: boolean
 }
+
+/** Phones and tablets drive the tour by touch; desktops drive it by Pointer Lock. */
+const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches
+
 interface GameState {
   ready: boolean; phase: Phase; locked: boolean; focus: { id: string; label: string } | null
   dialogue: Dialogue | null; greeted: boolean; visitedRH: boolean; spokeToAne: boolean
-  location: string; visited: string[]; npcState: NPCState; muted: boolean; quality: 'high' | 'low'
+  location: string; npcState: NPCState; muted: boolean; quality: 'high' | 'low'
+  touch: boolean; portrait: boolean
   unlocked: string[]; toast: Achievement | null
   pointerError: string; fps: number
   setReady: () => void
@@ -26,8 +31,12 @@ interface GameState {
 
 export const useGame = create<GameState>((set, get) => ({
   ready: false, phase: 'start', locked: false, focus: null, dialogue: null,
-  greeted: false, visitedRH: false, spokeToAne: false, location: 'Entrada', visited: ['Entrada'],
-  npcState: 'IDLE', muted: false, quality: 'high', unlocked: [], toast: null,
+  greeted: false, visitedRH: false, spokeToAne: false, location: 'Entrada',
+  npcState: 'IDLE', muted: false,
+  // Touch hardware starts on the lighter tier: no shadows and a device pixel ratio of 1.
+  quality: coarse ? 'low' : 'high',
+  touch: coarse, portrait: false,
+  unlocked: [], toast: null,
   pointerError: '', fps: 0,
   setReady: () => set({ ready: true }),
   setLocked: (locked) => set({ locked, phase: locked ? 'playing' : (get().phase === 'start' ? 'start' : 'paused'), focus: null }),

@@ -26,7 +26,25 @@ Abra <http://127.0.0.1:5173>, clique em **Entrar** e aceite o bloqueio do mouse.
 | `F3` | Mostrar FPS |
 
 Na pausa dá para alternar **Som** e **Gráficos** (Qualidade / Desempenho — o modo
-Desempenho desliga sombras e reduz o DPR).
+Desempenho desliga sombras, reduz o DPR e mantém acesas só as luzes do corredor,
+do RH e da área de Tecnologia).
+
+### Celular e tablet
+
+O tour funciona por toque, sem teclado e sem Pointer Lock (que o Safari do iPhone
+nem tem). Tocar em **Entrar** já entrega o controle ao visitante.
+
+| Gesto | Ação |
+|---|---|
+| Analógico (canto inferior esquerdo) | Andar — quanto mais inclinado, mais rápido |
+| Arrastar em qualquer outro ponto | Olhar |
+| Botão redondo (canto inferior direito) | Interagir — acende quando há algo na mira |
+| Tocar no balão de conversa | Avançar o diálogo |
+| Botão de pausa (canto superior direito) | Pausar |
+
+Aparelhos de toque entram automaticamente no modo **Desempenho**. Em retrato o campo
+de visão abre e aparece uma dica para girar o aparelho — dá para jogar em pé, mas
+deitado é bem melhor.
 
 ## Roteiro sugerido para testar
 
@@ -45,11 +63,18 @@ npm run dev           # servidor de desenvolvimento
 npm run build         # typecheck + build de produção
 npm run preview       # serve o build
 npm test              # testes unitários (matemática da porta)
-npm run test:browser  # 24 checks de navegador — exige o dev server rodando
+npm run test:browser  # 24 checks de teclado e mouse — exige o dev server rodando
+npm run test:mobile   # 13 checks de toque (iPhone paisagem e retrato)
 ```
 
-`test:browser` dirige um Chrome de verdade com Pointer Lock real, percorre o prédio
-inteiro e grava screenshots e um relatório em `test-results/`.
+`test:browser` dirige um Chrome de verdade com Pointer Lock real e percorre o prédio
+inteiro. `test:mobile` repete o percurso com emulação de toque: analógico, arrasto,
+botão de ação e o café da Rosinha só no dedo. Ambos gravam screenshots e um relatório
+em `test-results/`.
+
+Os testes miram com `__tourTest.aim(x, y, z)`, que calcula o ângulo a partir da posição
+em que o corpo realmente parou. Um teleporte pode cair dentro de um colisor e ser
+empurrado; ângulo escrito à mão no teste vira teste instável.
 
 ## Arquitetura
 

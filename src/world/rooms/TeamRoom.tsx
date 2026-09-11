@@ -2,7 +2,7 @@ import { Box, Solid } from '../primitives'
 import { Plant, Workstation } from '../Furniture'
 import { CeilingStrip, Moodboard, Poster, TV, Whiteboard } from '../Decor'
 import { Door } from '../Door'
-import { Zone } from '../Zone'
+import { RoomLight, Zone } from '../Zone'
 import type { ScreenKind } from '../screens'
 
 interface TeamRoomProps {
@@ -27,7 +27,7 @@ interface TeamRoomProps {
 export function TeamRoom({ z0, id, label, kinds, second, wallScreen, board = 'whiteboard', posterVariant = 0, seed = 1 }: TeamRoomProps) {
   const middle = z0 - 2.4
   return <>
-    <pointLight position={[5.9, 2.62, middle]} intensity={11} distance={9.5} decay={2} color="#fff0d2" />
+    <RoomLight position={[5.9, 2.62, middle]} />
     <Door id={`door-${id}`} hinge={[3.2, 0, z0 - 0.8]} base={Math.PI / 2} swing={-1} label={`porta da ${label}`} />
     <Zone center={[5.9, middle]} radius={15}>
       {/* Stations: two against the back wall, two along the east side.

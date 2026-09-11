@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useGame } from '../game/store'
 import { playSound, unlockAudio } from '../audio/audio'
 import { playerRuntime } from '../player/runtime'
+import { TouchControls } from './TouchControls'
 
 const logo = '/assets/brand/logo-standart-white-zV0Tc470.svg'
 
@@ -10,6 +11,9 @@ async function enter() {
   if (!canvas || !useGame.getState().ready) return
   useGame.setState({ pointerError: '' })
   unlockAudio()
+  // Touch devices have no Pointer Lock (iOS Safari has none at all), so tapping
+  // Entrar is itself the signal that the visitor has control.
+  if (useGame.getState().touch) { useGame.getState().setLocked(true); return }
   try {
     await canvas.requestPointerLock()
   } catch {
@@ -18,6 +22,10 @@ async function enter() {
 }
 
 function Controls() {
+  const touch = useGame(state => state.touch)
+  if (touch) return <div className="controls">
+    <span><kbd>◍</kbd> Andar</span><span><kbd>Arrastar</kbd> Olhar</span><span><kbd>✛</kbd> Interagir</span>
+  </div>
   return <div className="controls"><span><kbd>W A S D</kbd> Andar</span><span><kbd>Mouse</kbd> Olhar</span><span><kbd>Shift</kbd> Acelerar</span><span><kbd>E</kbd> Interagir</span><span><kbd>Esc</kbd> Pausar</span></div>
 }
 
@@ -45,6 +53,7 @@ export function Interface() {
   const visited = useGame(state => state.visitedRH)
   const muted = useGame(state => state.muted)
   const quality = useGame(state => state.quality)
+  const touch = useGame(state => state.touch)
   const error = useGame(state => state.pointerError)
   const [showStats, setShowStats] = useState(false)
   const fps = useGame(state => state.fps)
@@ -68,12 +77,14 @@ export function Interface() {
     </div>}
     {phase === 'playing' && <>
       <div className="location"><span className="location-dot" /><div><small>YELLOW KITE / OFFICE TOUR</small><span>{location}</span></div></div>
-      <div className="pause-hint"><kbd>Esc</kbd><span>Pausar</span></div>
+      {!touch && <div className="pause-hint"><kbd>Esc</kbd><span>Pausar</span></div>}
       {!dialogue && <div className={`reticle${focus ? ' active' : ''}`} aria-hidden="true" />}
-      {!dialogue && focus && <div className="interaction-prompt" role="status"><kbd>E</kbd><span>{focus.label}</span></div>}
-      {!dialogue && !visited && <div className="walk-hint"><Controls /></div>}
+      {!dialogue && focus && !touch && <div className="interaction-prompt" role="status"><kbd>E</kbd><span>{focus.label}</span></div>}
+      {!dialogue && !visited && !touch && <div className="walk-hint"><Controls /></div>}
       <Award />
-      {dialogue && <section className="dialogue" role="dialog" aria-label={`Conversa com ${dialogue.name}`}>
+      {touch && <TouchControls />}
+      {dialogue && <section className={`dialogue${touch ? ' tappable' : ''}`} role="dialog" aria-label={`Conversa com ${dialogue.name}`}
+        onPointerDown={touch && !dialogue.awaitingChoice ? () => useGame.getState().nextDialogue() : undefined}>
         <div className="dialogue-heading">
           <span>{dialogue.name}</span><small>{dialogue.team}</small>
           {!dialogue.awaitingChoice && <span className="dialogue-count">0{dialogue.index + 1} / 0{dialogue.lines.length}</span>}
@@ -81,11 +92,12 @@ export function Interface() {
         <p aria-live="polite">{dialogue.awaitingChoice ? dialogue.choice?.prompt : dialogue.lines[dialogue.index]}</p>
         {dialogue.awaitingChoice
           ? <div className="dialogue-choices">{dialogue.choice?.options.map(option =>
-              <button key={option.id} className="choice" onClick={() => {
+              <button key={option.id} className="choice" onPointerDown={event => {
+                event.preventDefault()
                 const chosen = useGame.getState().chooseOption(option.key)
                 if (chosen) playSound(chosen.grants ? 'coffee' : 'latch')
-              }}><kbd>{option.hint}</kbd><span>{option.label}</span></button>)}</div>
-          : <div className="dialogue-next"><span>{dialogue.index === dialogue.lines.length - 1 && !dialogue.choice ? 'Voltar a explorar' : 'Continuar'}</span><kbd>E</kbd></div>}
+              }}>{!touch && <kbd>{option.hint}</kbd>}<span>{option.label}</span></button>)}</div>
+          : <div className="dialogue-next"><span>{dialogue.index === dialogue.lines.length - 1 && !dialogue.choice ? 'Voltar a explorar' : 'Continuar'}</span>{touch ? <kbd aria-hidden="true">›</kbd> : <kbd>E</kbd>}</div>}
       </section>}
     </>}
     {phase === 'paused' && <div className="pause-screen"><section className="pause-card" role="dialog" aria-label="Visita em pausa">
@@ -98,6 +110,5 @@ export function Interface() {
       {error && <p className="error" role="alert">{error}</p>}
     </section></div>}
     {showStats && <div className="stats">{fps} FPS · {quality === 'high' ? 'Qualidade' : 'Desempenho'}</div>}
-    <div className="touch-notice">Esta visita foi criada para computador, com teclado e mouse.</div>
   </div>
 }

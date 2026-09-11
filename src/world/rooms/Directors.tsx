@@ -2,7 +2,7 @@ import { Box, Sign } from '../primitives'
 import { Chair, Laptop, MeetingTable, Plant, Shelf } from '../Furniture'
 import { CeilingStrip, Poster, Rug, TV } from '../Decor'
 import { Door } from '../Door'
-import { Zone } from '../Zone'
+import { RoomLight, Zone } from '../Zone'
 
 /**
  * Room for Marcos Paulo and Carina. Furniture only — no invented role, history
@@ -10,7 +10,7 @@ import { Zone } from '../Zone'
  */
 export function Directors() {
   return <>
-    <pointLight position={[5.9, 2.62, -26]} intensity={12} distance={10} decay={2} color="#fff0d2" />
+    <RoomLight position={[5.9, 2.62, -26]} intensity={12} distance={10} />
     <Door id="door-directors" hinge={[4.4, 0, -23]} width={1.75} label="porta da sala dos diretores" />
     <Zone center={[5.9, -26]}>
       <Rug position={[5.9, 0.008, -26.2]} size={[3.9, 2.5]} color="#8a9182" />

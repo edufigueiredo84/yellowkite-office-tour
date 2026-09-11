@@ -22,9 +22,13 @@ const snapshot = async () => {
 const shot = name => page.screenshot({ path: `test-results/${name}.png` })
 const place = async (x, z, yaw = 0, pitch = 0) => {
   await page.evaluate(args => window.__tourTest.place(...args), [x, z, yaw, pitch])
-  await page.waitForTimeout(250)
+  await page.waitForTimeout(420)
 }
 const hold = async (key, ms) => { await page.keyboard.down(key); await page.waitForTimeout(ms); await page.keyboard.up(key); await page.waitForTimeout(160) }
+const aim = async (x, y, z) => {
+  await page.evaluate(args => window.__tourTest.aim(...args), [x, y, z])
+  await page.waitForTimeout(160)
+}
 const check = async (name, run) => {
   await run(); report.push({ name, passed: true }); console.log(`PASS ${name}`)
 }
@@ -103,7 +107,8 @@ try {
     assert.equal((await snapshot()).game.focus, null)
   })
   await check('conversation with Ane shows both supplied lines', async () => {
-    await place(4.8, -2.95, -Math.atan2(1.2, 0.5), -0.08)
+    await place(4.8, -2.95)
+    await aim(6, 1.5, -3.45)
     await page.waitForFunction(() => window.__tourTest.snapshot().game.focus?.id === 'ane')
     await page.keyboard.press('e')
     await page.getByText('Oi! Seja bem-vindo à Yellow Kite!', { exact: true }).waitFor()
@@ -203,7 +208,8 @@ try {
     await shot('10-copa')
   })
   await check('Rosinha notices the player inside the copa', async () => {
-    await place(1.75, -25.8, 0.3805, -0.062)
+    await place(1.7, -26.2)
+    await aim(1.15, 1.5, -27.3)
     await page.waitForFunction(() => window.__tourTest.snapshot().game.focus?.id === 'rosinha')
     assert.equal((await snapshot()).game.focus.label, 'Conversar com Rosinha')
   })
@@ -229,7 +235,8 @@ try {
     await useDoor('door-directors', 5.2, -21.6, 0, 1900)
     let current = await snapshot()
     assert.equal(current.game.location, 'Sala dos diretores')
-    await place(3.85, -27.35, -0.7854, -0.094)
+    await place(3.85, -27.35)
+    await aim(4.6, 1.5, -28.1)
     await page.waitForTimeout(500)
     current = await snapshot()
     assert.equal(current.game.focus, null, JSON.stringify(current.game.focus))

@@ -3,7 +3,7 @@ import { Box, Sign } from '../primitives'
 import { Chair, CoffeeMachine, Counter, Fridge, Plant } from '../Furniture'
 import { CeilingStrip, Pendant, Poster } from '../Decor'
 import { Door } from '../Door'
-import { Zone } from '../Zone'
+import { RoomLight, Zone } from '../Zone'
 
 function RoundTable({ position }: { position: [number, number, number] }) {
   return <group position={position}>
@@ -22,7 +22,7 @@ function RoundTable({ position }: { position: [number, number, number] }) {
 /** Rosinha's room. The coffee interaction lives on her NPC, not on the scenery. */
 export function Copa() {
   return <>
-    <pointLight position={[1.7, 2.6, -25.6]} intensity={11} distance={9} decay={2} color="#fff0d2" />
+    <RoomLight position={[1.7, 2.6, -25.6]} distance={9} />
     <Door id="door-copa" hinge={[0.65, 0, -23]} width={1.7} label="porta da copa" />
     <Zone center={[1.6, -26]}>
       <Counter position={[0.38, 0, -25.6]} rotation={Math.PI / 2} width={3.4} />

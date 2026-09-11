@@ -1,7 +1,7 @@
 import { Brand, Sign } from '../primitives'
 import { LowTable, Plant, Printer, Shelf, Sofa, Workstation } from '../Furniture'
 import { CeilingStrip, Moodboard, Poster, Rug } from '../Decor'
-import { Zone } from '../Zone'
+import { RoomLight, Zone } from '../Zone'
 import type { ScreenKind } from '../screens'
 
 /**
@@ -18,7 +18,7 @@ const rows: { z: number; stations: ScreenKind[]; second?: ScreenKind }[] = [
 export function TechArt() {
   return <>
     <pointLight position={[11.6, 2.7, -22.6]} intensity={13} distance={12} decay={2} color="#fff0d2" />
-    <pointLight position={[14.8, 2.7, -26.6]} intensity={13} distance={12} decay={2} color="#fff0d2" />
+    <RoomLight position={[14.8, 2.7, -26.6]} intensity={13} distance={12} />
     <Zone center={[13.3, -24.1]} radius={24}>
       {rows.map((row, index) => [10.8, 12.6, 14.4].map((x, seat) =>
         <Workstation key={`${row.z}:${x}`} position={[x, 0, row.z]} kind={row.stations[seat]}

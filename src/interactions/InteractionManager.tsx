@@ -9,6 +9,9 @@ import { playSound } from '../audio/audio'
 export interface Interaction {
   id: string; distance: number; label: () => string | null; execute: () => void
 }
+
+/** Lets the on-screen action button run exactly what the E key runs. */
+export const inputBridge = { act: () => {} }
 const Registry = createContext<Map<string, Interaction> | null>(null)
 export function useInteraction(interaction: Interaction) {
   const registry = useContext(Registry)
@@ -63,6 +66,13 @@ export function InteractionManager({ children }: { children: ReactNode }) {
     useGame.getState().setFocus(resolve.current())
   })
   useEffect(() => {
+    const act = () => {
+      const state = useGame.getState()
+      if (!state.locked || state.phase !== 'playing' || state.dialogue?.awaitingChoice) return
+      if (state.dialogue) { state.nextDialogue(); return }
+      const focus = resolve.current()
+      if (focus) registry.get(focus.id)?.execute()
+    }
     const keydown = (event: KeyboardEvent) => {
       const state = useGame.getState()
       if (event.repeat || !state.locked || state.phase !== 'playing') return
@@ -73,12 +83,11 @@ export function InteractionManager({ children }: { children: ReactNode }) {
       }
       if (event.code !== 'KeyE') return
       event.preventDefault()
-      if (state.dialogue) { state.nextDialogue(); return }
-      const focus = resolve.current()
-      if (focus) registry.get(focus.id)?.execute()
+      act()
     }
+    inputBridge.act = act
     window.addEventListener('keydown', keydown)
-    return () => window.removeEventListener('keydown', keydown)
+    return () => { window.removeEventListener('keydown', keydown); inputBridge.act = () => {} }
   }, [registry])
   return <Registry.Provider value={registry}>{children}</Registry.Provider>
 }

@@ -3,6 +3,21 @@ import { useFrame } from '@react-three/fiber'
 import type { ReactNode } from 'react'
 import { Group } from 'three'
 import { playerRuntime } from '../player/runtime'
+import { useGame } from '../game/store'
+
+/**
+ * A room light that only exists on the Qualidade tier. Every extra point light costs
+ * every lit surface in the scene, which is the first thing a phone GPU feels — so the
+ * Desempenho tier keeps the corridor and the two biggest rooms lit and drops the rest
+ * onto the hemisphere light. Mounting and unmounting rebuilds shader programs, so this
+ * must never be driven by anything that changes while the player is moving.
+ */
+export function RoomLight(props: { position: [number, number, number]; intensity?: number; distance?: number }) {
+  const full = useGame(state => state.quality === 'high')
+  if (!full) return null
+  return <pointLight position={props.position} intensity={props.intensity ?? 11}
+    distance={props.distance ?? 9.5} decay={2} color="#fff0d2" />
+}
 
 /**
  * Hides a room's decoration while the player is far enough away that walls already

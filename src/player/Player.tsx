@@ -12,45 +12,83 @@ const direction = new Vector3()
 const up = new Vector3(0, 1, 0)
 const euler = new Euler(0, 0, 0, 'YXZ')
 const validKeys = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight']
+const MOUSE_SENSITIVITY = 0.0018
+const TOUCH_SENSITIVITY = 0.0042
+const PITCH_LIMIT = 1.45
 
 export function Player() {
   const body = useRef<RapierRigidBody>(null)
   const { camera, gl } = useThree()
   const stepTime = useRef(0)
   useEffect(() => {
+    // `locked` means "the player has control": Pointer Lock on desktop, tapping Entrar on touch.
     const onKeyDown = (event: KeyboardEvent) => {
-      if (validKeys.includes(event.code) && document.pointerLockElement === gl.domElement) {
+      if (validKeys.includes(event.code) && useGame.getState().locked) {
         event.preventDefault(); keys.add(event.code)
       }
     }
     const onKeyUp = (event: KeyboardEvent) => { keys.delete(event.code) }
-    const clear = () => { keys.clear() }
+    const clear = () => { keys.clear(); playerRuntime.move.x = 0; playerRuntime.move.z = 0 }
     const onLock = () => {
       clear()
-      useGame.getState().setLocked(document.pointerLockElement === gl.domElement)
+      if (!useGame.getState().touch) useGame.getState().setLocked(document.pointerLockElement === gl.domElement)
     }
-    const onBlur = () => { clear(); if (document.pointerLockElement) document.exitPointerLock() }
+    const onBlur = () => {
+      clear()
+      if (document.pointerLockElement) document.exitPointerLock()
+      else if (useGame.getState().touch && useGame.getState().phase === 'playing') useGame.getState().setLocked(false)
+    }
     const onVisibility = () => { if (document.hidden) onBlur() }
     const onMouse = (event: MouseEvent) => {
       if (document.pointerLockElement !== gl.domElement || useGame.getState().phase !== 'playing') return
-      playerRuntime.yaw -= event.movementX * 0.0018
-      playerRuntime.pitch = Math.max(-1.45, Math.min(1.45, playerRuntime.pitch - event.movementY * 0.0018))
+      playerRuntime.yaw -= event.movementX * MOUSE_SENSITIVITY
+      playerRuntime.pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, playerRuntime.pitch - event.movementY * MOUSE_SENSITIVITY))
     }
+
+    // Dragging anywhere the on-screen controls do not cover turns the camera.
+    // Tracking by pointerId lets one thumb steer while the other drives the stick.
+    const drags = new Map<number, { x: number; y: number }>()
+    const onPointerDown = (event: PointerEvent) => {
+      const state = useGame.getState()
+      // Gated on touch mode rather than pointerType, so a tablet paired with a mouse
+      // still drags to look, and a desktop keeps looking through Pointer Lock alone.
+      if (!state.touch || state.phase !== 'playing' || state.dialogue) return
+      drags.set(event.pointerId, { x: event.clientX, y: event.clientY })
+      gl.domElement.setPointerCapture?.(event.pointerId)
+    }
+    const onPointerMove = (event: PointerEvent) => {
+      const previous = drags.get(event.pointerId)
+      if (!previous) return
+      playerRuntime.yaw -= (event.clientX - previous.x) * TOUCH_SENSITIVITY
+      playerRuntime.pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT,
+        playerRuntime.pitch - (event.clientY - previous.y) * TOUCH_SENSITIVITY))
+      previous.x = event.clientX; previous.y = event.clientY
+    }
+    const onPointerUp = (event: PointerEvent) => { drags.delete(event.pointerId) }
+
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
     window.addEventListener('blur', onBlur)
     document.addEventListener('visibilitychange', onVisibility)
     document.addEventListener('pointerlockchange', onLock)
     document.addEventListener('mousemove', onMouse)
+    gl.domElement.addEventListener('pointerdown', onPointerDown)
+    gl.domElement.addEventListener('pointermove', onPointerMove)
+    gl.domElement.addEventListener('pointerup', onPointerUp)
+    gl.domElement.addEventListener('pointercancel', onPointerUp)
     playerRuntime.teleport = (x, z) => {
       body.current?.setTranslation({ x, y: 0.85, z }, true)
       body.current?.setLinvel({ x: 0, y: 0, z: 0 }, true)
-      keys.clear()
+      clear()
     }
     return () => {
       window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp)
       window.removeEventListener('blur', onBlur); document.removeEventListener('visibilitychange', onVisibility)
       document.removeEventListener('pointerlockchange', onLock); document.removeEventListener('mousemove', onMouse)
+      gl.domElement.removeEventListener('pointerdown', onPointerDown)
+      gl.domElement.removeEventListener('pointermove', onPointerMove)
+      gl.domElement.removeEventListener('pointerup', onPointerUp)
+      gl.domElement.removeEventListener('pointercancel', onPointerUp)
       playerRuntime.teleport = null; clear()
     }
   }, [gl])
@@ -59,10 +97,15 @@ export function Player() {
     if (!body.current) return
     const state = useGame.getState()
     const moving = state.phase === 'playing' && state.locked && !state.dialogue
-    direction.set(moving ? Number(keys.has('KeyD')) - Number(keys.has('KeyA')) : 0, 0,
-      moving ? Number(keys.has('KeyS')) - Number(keys.has('KeyW')) : 0).normalize()
+    const stick = playerRuntime.move
+    direction.set(
+      moving ? Number(keys.has('KeyD')) - Number(keys.has('KeyA')) + stick.x : 0, 0,
+      moving ? Number(keys.has('KeyS')) - Number(keys.has('KeyW')) + stick.z : 0)
+    // Clamping instead of normalising keeps the stick analogue while capping keyboard diagonals.
+    if (direction.lengthSq() > 1) direction.normalize()
     direction.applyAxisAngle(up, playerRuntime.yaw)
-    const speed = keys.has('ShiftLeft') || keys.has('ShiftRight') ? 4.1 : 2.55
+    const running = keys.has('ShiftLeft') || keys.has('ShiftRight')
+    const speed = running ? 4.1 : state.touch ? 3.3 : 2.55
     const velocity = body.current.linvel()
     const smoothing = direction.lengthSq() ? 0.22 : 0.42
     body.current.setLinvel({ x: velocity.x + (direction.x * speed - velocity.x) * smoothing,
